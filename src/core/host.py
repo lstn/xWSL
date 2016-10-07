@@ -46,8 +46,9 @@ class Host:
                     self.fw('received "%s"\n' % data)
                     if data:
                         self.fw("executing client's request\n")
-                        compl = subprocess.run(data, universal_newlines=True, stdout=subprocess.PIPE)
+                        compl = subprocess.run(data, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         response = compl.stdout
+                        response = "Command executed" if not response else response
                         self.fw("resp: " + response)
                         connection.sendall(response.encode())
                         data = None
@@ -55,7 +56,8 @@ class Host:
                     else:
                         self.fw('no more data from {}\n'.format(client_address))
                         break
-                    
+            except socket.timeout:    
+                self.fw("socket timed out\n")    
             finally:
                 # Clean up the connection
                 connection.close()         

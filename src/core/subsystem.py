@@ -1,9 +1,10 @@
 import socket
 import sys
 
-def run_client():
+def run_client(argv):
+    cmdlet = ' '.join(argv[1:])
     _client = Client()
-    _client.run("cmd /c dir")
+    _client.run(cmdlet)
 
 class Client:
     server_address = ('localhost', 15579)
@@ -37,4 +38,4 @@ class Client:
             self.sock.close()
 
 if __name__ == '__main__':
-    run_client()
+    run_client(sys.argv)
