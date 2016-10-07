@@ -3,7 +3,7 @@ import sys
 
 def run_client():
     _client = Client()
-    _client.run("i fucking love memes")
+    _client.run("cmd /c dir")
 
 class Client:
     server_address = ('localhost', 15579)
@@ -20,16 +20,17 @@ class Client:
         try:
             # Send data
             print('sending "%s"' % message)
-            self.sock.sendall(message)
+            self.sock.sendall(message.encode())
 
             # Look for the response
             amount_received = 0
             amount_expected = len(message)
             
-            while amount_received < amount_expected:
-                data = self.sock.recv(512)
-                amount_received += len(data)
-                print('received "%s"' % data)
+            while True:
+                data = self.sock.recv(2048).decode()
+                if data:
+                    print('received "%s"' % data)
+                    break
 
         finally:
             print('closing socket')

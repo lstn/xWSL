@@ -27,10 +27,10 @@ class xWLSWin32HostService(win32serviceutil.ServiceFramework):
         
     def main(self):
         f = open('C:\\testpyinstaller.txt', 'a')
-        host = xwls_host.Host()
+        host = xwls_host.Host(fileToWrite=f)
         rc = None
         while rc != win32event.WAIT_OBJECT_0:
-            xWLS_host.run_host(host) # This is where my logic exists
+            xwls_host.run_host(host) # This is where my logic exists
             f.write('Test Service  \n')
             f.flush()
             #block for 24*60*60 seconds and wait for a stop event
