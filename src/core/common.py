@@ -1,5 +1,6 @@
 import shlex
 from . import constants as const
+import asyncio
 
 class xWSLSockMixin:
     def sendall(self, command, channel):
@@ -23,3 +24,27 @@ class xWSLSockMixin:
     @staticmethod
     def get_mode_from_modifier(modifier):
         return const.XWSL_MODIFIERS.get(modifier, None)
+
+class AsyncObjMixin:
+    async def __aenter__(self):
+        print("enter")
+
+    async def __aexit__(self, *args):
+        print("exit")
+
+    def __await__(self):
+        return self.__aenter__().__await__()
+
+class AsyncIterMixin:
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        data = await asyncio.sleep(1)# self.fetch_data()
+        if data:
+            return data
+        else:
+            raise StopAsyncIteration
+
+   # async def fetch_data(self):
+        
