@@ -3,10 +3,10 @@ from . import constants as const
 
 class xWSLSockMixin:
     def sendall(self, command, channel):
-        channel.sendall(command.encode())
+        channel.sendall(command.encode("UTF-8"))
     
     def recv(self, size, channel):
-        return channel.recv(size).decode()
+        return channel.recv(size).decode("UTF-8")
     
     @staticmethod
     def cmdstring_to_cmdarray(command):

@@ -1,8 +1,13 @@
 import socket
 import sys
+import os 
+import re
 
-from . import common
-from . import constants as const
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path); sys.path.append(os.path.join(dir_path, ".."))
+
+from core import common
+from core import constants as const
 
 def run_client(argv):
     mode = argv[1]
@@ -28,7 +33,6 @@ class Client(common.xWSLSockMixin):
     def process(self, command):
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # print('connecting to %s port %s' % self.server_address)
         self.sock.connect(self.server_address)
 
         try:
@@ -40,32 +44,29 @@ class Client(common.xWSLSockMixin):
             print("Socket timed out")
 
         finally:
-            # print('closing socket')
             self.sock.close()
 
     def await_response(self):
         received_resp_size_flag = False
 
         while not received_resp_size_flag:
-            resp_size = self.recv(XWSL_RECV_SIZES["bytesize"], self.sock)
+            resp_size = self.recv(const.XWSL_RECV_SIZES["bytesize"], self.sock)
             if resp_size:
                 cmdarray = self.cmdstring_to_cmdarray(resp_size)
                 mode = self.get_mode_from_modifier(cmdarray[0])
                 if mode is "bytesize":
                     received_resp_size_flag = True
-                    resp_size = cmdarray[1]
+                    resp_size = int(cmdarray[1])
                     self.sendall(const.XWSL_RESP_RMODES["ack"], self.sock) # send back ack
                 else:
                     resp_size = None
         
-        resp_size = (int) resp_size
         while True:
             resp = self.recv(resp_size+1, self.sock)
-            if resp:
-                cmdarray = self.cmdstring_to_cmdarray(resp)
-                mode = self.get_mode_from_modifier(cmdarray[0])
+            if resp: 
+                mode = self.get_mode_from_modifier(resp[0:2])
+                resp = resp[3:]
                 if mode is "data":
-                    resp = self.cmdarray_to_cmdstring(cmdarray[1:])
                     return resp
                 else:
                     resp = None

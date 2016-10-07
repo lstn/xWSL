@@ -5,7 +5,7 @@ XWSL_CMD_CMODES[0, "r", "run"]       = "~r"
 XWSL_CMD_CMODES[1, "c", "cmd"]       = "~c"
 XWSL_CMD_CMODES[2, "s", "start"]     = "~s"
 
-XWSL_RESP_MODES = multi_key_dict()
+XWSL_RESP_RMODES = multi_key_dict()
 XWSL_RESP_RMODES[3, "a", "ack"]      = "!A"
 XWSL_RESP_RMODES[4, "d", "data"]     = "!d"
 XWSL_RESP_RMODES[5, "b", "bytesize"] = "!b"

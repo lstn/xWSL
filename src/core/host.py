@@ -48,6 +48,7 @@ class Host(common.xWSLSockMixin):
 
     def process(self):
         has_connection_flag = False
+        connection = None
         
         while not has_connection_flag:
             self.fw("Waiting for a connection...\n")
@@ -58,7 +59,7 @@ class Host(common.xWSLSockMixin):
                 
                 response, rlen, rsize = self.await_command(connection)
                 self.fw("Sending ack request for {} bytes...\n".format(rsize))
-                self.send_bytesize(rsize)
+                self.send_bytesize(rsize, connection)
                 self.await_ack(connection)
                 self.send_result(response, connection)
 
@@ -67,7 +68,8 @@ class Host(common.xWSLSockMixin):
                 has_connection_flag = False
 
             finally:
-                connection.close()  
+                if connection is not None:
+                    connection.close()  
                 has_connection_flag = False
     
     def await_command(self, connection):
@@ -86,7 +88,7 @@ class Host(common.xWSLSockMixin):
         received_ack_flag = False
 
         while not received_ack_flag:
-            ack_confirmation = self.recv(XWSL_RECV_SIZES["ack"], connection)
+            ack_confirmation = self.recv(const.XWSL_RECV_SIZES["ack"], connection)
             if ack_confirmation:
                 cmdarray = self.cmdstring_to_cmdarray(ack_confirmation)
                 mode = self.get_mode_from_modifier(cmdarray[0])
@@ -99,7 +101,7 @@ class Host(common.xWSLSockMixin):
         
 
     def process_command(self, command):
-        cmdarray = self.cmdstring_to_cmdarray(data)
+        cmdarray = self.cmdstring_to_cmdarray(command)
         mode = self.get_mode_from_modifier(cmdarray[0])
         cmdarray = cmdarray[1:]
         command = self.cmdarray_to_cmdstring(cmdarray)
@@ -115,6 +117,8 @@ class Host(common.xWSLSockMixin):
         self.sendall(result_msg, connection)
 
     def run(self, command):
+        outs = None
+        response = None
         self.fw("running client's request\n")
 
         cmd_runner = subprocess.Popen(command, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -122,7 +126,7 @@ class Host(common.xWSLSockMixin):
             cmd_runner.communicate(timeout=2)
         except subprocess.TimeoutExpired:
             pass
-            #Will likely not be able to get output.
+            # Will likely not be able to get output.
         try:
             if cmd_runner.poll() is not None:
                 outs, errs = cmd_runner.communicate(timeout=8)
@@ -138,28 +142,6 @@ class Host(common.xWSLSockMixin):
         rsize = sys.getsizeof(response)
 
         return response, rlen, rsize
-
-        # while True:
-        #     self.fw("Waiting for a connection...\n")
-        #     try:
-        #         connection, client_address = self.sock.accept()
-        #         self.fw("Connection from {}\n".format(client_address))
-        #         # Receive the data in small chunks and retransmit it
-        #         while True:
-        #             data = connection.recv(const.XWSL_RECV_SIZES["cmd"]).decode()
-        #             self.fw('received "%s"\n' % data)
-        #             if data:
-        #                 self.fw("executing client's request\n")
-        #                 compl = subprocess.run(data, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #                 response = compl.stdout
-        #                 response = "Command executed" if not response else response
-        #                 self.fw("resp: " + response)
-        #                 connection.sendall(response.encode())
-        #                 data = None
-        #                 # connection.sendall(data.encode())
-        #             else:
-        #                 self.fw('no more data from {}\n'.format(client_address))
-        #                 break
                
 
     def cmd(self, command):
@@ -191,7 +173,7 @@ class Host(common.xWSLSockMixin):
         self.fw("test33\n")
 
     def kill(self):
-        self.fw("test666\n")
+        self.fw("test66\n")
 
     def set_alive(self, status):
         self.__is_alive = status
