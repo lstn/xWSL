@@ -3,6 +3,7 @@ import sys
 import subprocess
 import os
 import asyncio
+import logging
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(dir_path); sys.path.append(os.path.join(dir_path, ".."))
@@ -12,34 +13,56 @@ from core import constants as const
 
 
 
-class SockServer(common.AsyncMixin):
-    def __init__(self, fileToWrite=None):
-        self.fileWrite = fileToWrite
-        self.fw("Initialized host\n")
+class SockServer(common.AsyncObjMixins, common.AsyncSockMixins):
+    """
+    Instanciate with `init_server`, not __init__.
+    """
+    sock = None
+    _sock_alive = None
+
+    @classmethod
+    async def init_server(cls, server_address=const.SOCK.DEFAULT_SERVER, fileToWrite=None):
+        loop = asyncio.get_event_loop()
+
+        server_address = const.SOCK.DEFAULT_SERVER
+        sock, sock_alive = await cls.start_socket(cls, server_address)
+        return cls(sock, sock_alive, fileToWrite=fileToWrite)
     
-    def start_socket(self):
+    def __init__(self, sock, sock_alive, fileToWrite=None):
+        self.sock = sock
+        self._fileWrite = fileToWrite
+    
+    async def start_socket(self, server_address):
         if not self._sock_alive:
-            self._sock_alive = True
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.fw('starting up on %s port %s\n' % self.server_address)
-            self.sock.bind(self.server_address)
-            self.sock.listen(const.SOCK.MAX_LISTENS)
+            try:
+                loop = asyncio.get_event_loop()
+                sock = await loop.run_in_executor(None, socket.socket, socket.AF_INET, socket.SOCK_STREAM)
+                await loop.run_in_executor(None, sock.bind, server_address)
+                await loop.run_in_executor(None, sock.listen, const.SOCK.MAX_LISTENS)
+                sock_alive = True
+                return sock, sock_alive
+            except Exception as e:
+                logging.exception(e)
+                print("except")
+                return None, False
         else:
-            self.fw('Sock is already up on %s port %s\n' % self.server_address)
+            return self.sock, self._sock_alive
+
+    async def terminate(self):
+        await self.fileWrite.flush
 
     async def fw(self, *args):
         if self.fileWrite is not None:
             await self.fileWrite.write(*args)
 
 async def run():
-    async with SockServer():
-        print("hello")
-
-    await SockServer()
+    sock_server = await SockServer.init_server()
+    print(sock_server.sock)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(run())
 loop.close()
+
 
 def run_host(host_obj):
     host_status = host_obj.get_alive()
@@ -58,7 +81,7 @@ def kill_host(host_obj):
     if host_status is True:
         host_obj.kill()
 
-class Host(common.xWSLSockMixin):
+class Host(common.xWSLMixins, common.SockMixins):
     __is_alive = None
     _sock_alive = False
     server_address = const.SOCK.DEFAULT_SERVER

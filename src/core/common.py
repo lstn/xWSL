@@ -2,13 +2,7 @@ import shlex
 from . import constants as const
 import asyncio
 
-class xWSLSockMixin:
-    def sendall(self, command, channel):
-        channel.sendall(command.encode("UTF-8"))
-    
-    def recv(self, size, channel):
-        return channel.recv(size).decode("UTF-8")
-    
+class xWSLMixins:
     @staticmethod
     def cmdstring_to_cmdarray(command):
         return shlex.split(command)
@@ -25,7 +19,21 @@ class xWSLSockMixin:
     def get_mode_from_modifier(modifier):
         return const.XWSL_MODIFIERS.get(modifier, None)
 
-class AsyncObjMixin:
+class SockMixins:
+    def sendall(self, command, channel):
+        channel.sendall(command.encode("UTF-8"))
+    
+    def recv(self, size, channel):
+        return channel.recv(size).decode("UTF-8")
+
+class AsyncSockMixins:
+    async def sendall(self, command, channel):
+        await channel.sendall(command.encode("UTF-8"))
+    
+    async def recv(self, size, channel):
+        await channel.recv(size).decode("UTF-8")
+
+class AsyncObjMixins:
     async def __aenter__(self):
         print("enter")
 
@@ -35,7 +43,7 @@ class AsyncObjMixin:
     def __await__(self):
         return self.__aenter__().__await__()
 
-class AsyncIterMixin:
+class AsyncIterMixins:
     def __aiter__(self):
         return self
 
