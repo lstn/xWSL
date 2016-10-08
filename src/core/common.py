@@ -2,6 +2,9 @@ import shlex
 from . import constants as const
 import asyncio
 
+# ========================================================================== #
+# =========================== Synchronous Mixins =========================== #
+# ========================================================================== #
 class xWSLMixins:
     @staticmethod
     def cmdstring_to_cmdarray(command):
@@ -26,12 +29,40 @@ class SockMixins:
     def recv(self, size, channel):
         return channel.recv(size).decode("UTF-8")
 
+# ========================================================================== #
+# ============================== Async Mixins ============================== #
+# ========================================================================== #
+
+class AsyncxWSLMixins:
+    @staticmethod
+    async def cmdstring_to_cmdarray(command):
+        return shlex.split(command)
+    
+    @staticmethod
+    async def cmdarray_to_cmdstring(cmdarr):
+        return ' '.join(cmdarr)
+
+    @staticmethod
+    async def get_modifier_from_mode(mode):
+        return const.XWSL_CMD_CMODES.get(mode[0], None)
+
+    @staticmethod
+    async def get_mode_from_modifier(modifier):
+        return const.XWSL_MODIFIERS.get(modifier, None)
+
+
 class AsyncSockMixins:
     async def sendall(self, command, channel):
-        await channel.sendall(command.encode("UTF-8"))
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, channel.sendall(command.encode("UTF-8")))
     
     async def recv(self, size, channel):
-        await channel.recv(size).decode("UTF-8")
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, channel.recv(size).decode("UTF-8"))
+
+# ========================================================================== #
+# ================================= Asyncio ================================ #
+# ========================================================================== #
 
 class AsyncObjMixins:
     async def __aenter__(self):
