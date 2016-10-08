@@ -205,10 +205,10 @@ class Host(common.AsyncxWSLMixins, common.AsyncSockMixins, fwc.fwMixin):
         return response, rlen, rsize
 
     async def update(self):
-        self.fw("test33\n")
+        await self.fw("test33\n")
 
     async def kill(self):
-        self.fw("test66\n")
+        await self.fw("test66\n")
 
     async def set_alive(self, status):
         self.__is_alive = status
@@ -217,7 +217,7 @@ class Host(common.AsyncxWSLMixins, common.AsyncSockMixins, fwc.fwMixin):
         self.__is_alive = not self.__is_alive
 
     async def get_alive(self):
-        return self.__is_alive
+        self.__is_alive
 
 
 class HostManager(fwc.fwMixin):
@@ -239,10 +239,14 @@ class HostManager(fwc.fwMixin):
     @staticmethod
     async def run(server_address=const.SOCK.DEFAULT_SERVER, fileToWrite=None):
         host_manager = await HostManager.init_hostmanager(**const.KWARGS.HOSTMANAGER)
+        host = host_manager._host
+        sock_server = host_manager._sock_server
+        fwc_serv = host_manager._fwc_serv
         print(host_manager)
-        await host_manager.run_host(host_manager._host)
-
-        return host_manager
+        print(host)
+        print(sock_server)
+        print(fwc_serv)
+        await host_manager.run_host(host)
     
     @staticmethod
     async def run_host(host_obj):
