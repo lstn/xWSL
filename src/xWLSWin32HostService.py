@@ -8,6 +8,8 @@ import socket
 import time
 from core import host as xwls_host
 import sys
+import asyncio
+import time
 
 class xWLSWin32HostService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'xWLSWin32HostService'
@@ -28,25 +30,24 @@ class xWLSWin32HostService(win32serviceutil.ServiceFramework):
         self.timeout = 70000     #70 seconds / 1:10 minutes
         self.main()
         
-    def main(self):
+    async def main(self):
         f = open('C:\\testpyinstaller.txt', 'a')
-        host = xwls_host.Host(fileToWrite=f)
-        rc = None
-        while rc != win32event.WAIT_OBJECT_0:
-            xwls_host.run_host(host) # This is where my logic exists
-            f.write('Test Service  \n')
-            f.flush()
-            #block for 24*60*60 seconds and wait for a stop event
-            #it is used for a one-day loop
-            rc = win32event.WaitForSingleObject(self.hWaitStop, 24*60*60*1000)
+        self.host = xwls_host.Host(fileToWrite=f)
 
+        async def _logic_task(): 
+            await xwls_host.run_host(self.host) 
+            f.flush()
+        async def _kill_task():
+            pass
+
+        
+        rc = None
         while True:
             rc = win32event.WaitForSingleObject(self.hWaitStop, self.timeout)
 
             if rc == win32event.WAIT_OBJECT_0:
                 # Stop signal encountered
                 servicemanager.LogInfoMsg("xWLS - STOPPED!")
-                self._isAlive = False
                 break
             else:
                 try:
@@ -58,9 +59,6 @@ class xWLSWin32HostService(win32serviceutil.ServiceFramework):
         f.write('shut down \n')
         f.close()
         
-        #pass
-def ctrlHandler(ctrlType):
-   return True
         
 if __name__ == '__main__':
     if len(sys.argv) == 1:
@@ -68,5 +66,4 @@ if __name__ == '__main__':
         servicemanager.PrepareToHostSingle(xWLSWin32HostService)
         servicemanager.StartServiceCtrlDispatcher()
     else:
-        win32api.SetConsoleCtrlHandler(ctrlHandler, True)
         win32serviceutil.HandleCommandLine(xWLSWin32HostService)

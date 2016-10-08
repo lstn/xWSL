@@ -36,6 +36,18 @@ class SOCK:
     MAX_LISTENS         = 5
     DEFAULT_MODE        = "cmd"
 
+class ARGS:
+    SOCK_SERVER = []
+    FWC_SERV    = []
+    HOSTMANAGER = []
+    HOST        = []
+
+class KWARGS:
+    SOCK_SERVER = { 'server_address': SOCK.DEFAULT_SERVER, }
+    FWC_SERV    = { 'fileToWrite': None, }
+    HOSTMANAGER = { 'server_address': SOCK.DEFAULT_SERVER, 'fileToWrite': None, }
+    HOST        = {}
+
 
 
 
