@@ -236,14 +236,15 @@ class HostManager(fwc.fwMixin):
         self._sock_server = sock_server
         self._fwc_serv = fwc_serv
 
-    @classmethod
-    async def run(cls, server_address=const.SOCK.DEFAULT_SERVER, fileToWrite=None):
+    @staticmethod
+    async def run(server_address=const.SOCK.DEFAULT_SERVER, fileToWrite=None):
         host_manager = await HostManager.init_hostmanager(**const.KWARGS.HOSTMANAGER)
         print(host_manager)
-        await cls.run_host(cls._host)
+        await host_manager.run_host(host_manager._host)
 
         return host_manager
-
+    
+    @staticmethod
     async def run_host(host_obj):
         host_status = host_obj.get_alive()
         if host_status is None:
@@ -255,18 +256,19 @@ class HostManager(fwc.fwMixin):
         else:
             await host_obj.update()
 
+    @staticmethod
     async def kill_host(host_obj):
         host_status = host_obj.get_alive()
         if host_status is True:
             await host_obj.kill()
 
 
-    async def get_host(): return self._host;
-    async def set_host(*args, **kwargs): self._host = None;
-    async def get_sock_server(): return self._sock_server;
-    async def set_sock_server(*args, **kwargs): self._sock_server = await SockServer.init_server(*args, **kwargs);
-    async def get_fwc_serv(): return self._fwc_serv;
-    async def set_fwc_serv(*args, **kwargs): self._fwc_serv = await fwc.init_fwc(*args, **kwargs);
+    async def get_host(): return self._host
+    async def set_host(*args, **kwargs): self._host = None
+    async def get_sock_server(): return self._sock_server
+    async def set_sock_server(*args, **kwargs): self._sock_server = await SockServer.init_server(*args, **kwargs)
+    async def get_fwc_serv(): return self._fwc_serv
+    async def set_fwc_serv(*args, **kwargs): self._fwc_serv = await fwc.init_fwc(*args, **kwargs)
 
 
 loop = asyncio.get_event_loop()
