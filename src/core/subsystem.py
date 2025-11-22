@@ -11,11 +11,11 @@ from core import constants as const
 
 def run_client(argv):
     mode = argv[1]
-    command = common.xWSLSockMixin.cmdarray_to_cmdstring(argv[2:])
+    command = common.xWSLMixins.cmdarray_to_cmdstring(argv[2:])
     _client = Client()
     _client.prepare(mode, command)
 
-class Client(common.xWSLSockMixin):
+class Client(common.xWSLMixins, common.SockMixins):
     server_address = const.SOCK.DEFAULT_SERVER
 
     def __init__(self):
